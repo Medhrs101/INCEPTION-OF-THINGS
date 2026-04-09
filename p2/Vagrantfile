@@ -4,7 +4,6 @@ Vagrant.configure(VAGRANTFILE_CONFIGURATION_VERSION) do |config|
 
 
   master_ip = "192.168.56.110"
-  worker_ip = "192.168.56.111"
 
   scriptS = <<-SCRIPT
     curl -sfL https://get.k3s.io | \
@@ -18,22 +17,14 @@ Vagrant.configure(VAGRANTFILE_CONFIGURATION_VERSION) do |config|
     echo "alias k='sudo /usr/local/bin/k3s kubectl'" >> /home/vagrant/.bashrc
   SCRIPT
 
-  scriptW = <<-SCRIPT
-    NODE_TOKEN=$(cat /vagrant/token)
-    curl -sfL https://get.k3s.io | \
-    K3S_URL="https://#{master_ip}:6443" \
-    INSTALL_K3S_EXEC="agent --node-ip=#{worker_ip} --flannel-iface=eth1 --token-file=/vagrant/token" sh -
-    echo "alias k='sudo /usr/local/bin/k3s kubectl'" >> /home/vagrant/.bashrc
-  SCRIPT
-
 
   config.vm.define "fmehdaouS" do |node|
-    #the name of an installed box
     node.vm.box = "centos/stream9"
     node.vm.box_version = "20260331.0"
     node.vm.hostname = "fmehdaouS"
     node.vm.network "private_network", ip: master_ip
     node.vm.provider "virtualbox" do |v|
+    config.vm.synced_folder ".", "/vagrant", type: "rsync"
     v.name = "fmehdaouS"
     v.memory = 1024
     v.cpus = 2
@@ -43,21 +34,6 @@ Vagrant.configure(VAGRANTFILE_CONFIGURATION_VERSION) do |config|
       inline: scriptS
   end
 
-   config.vm.define "fmehdaouSW" do |node|
-    node.vm.box = "centos/stream9"
-    node.vm.box_version = "20260331.0"
-    node.vm.hostname = "fmehdaouSW"
-    node.vm.network "private_network", ip: worker_ip
-    config.vm.synced_folder ".", "/vagrant", type: "rsync"
-    node.vm.provider "virtualbox" do |v|
-    v.name = "fmehdaouSW"
-    v.memory = 1024
-    v.cpus = 1
-    end
-
-    node.vm.provision "shell",
-    inline: scriptW
-  end
 
 
 end
