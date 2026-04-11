@@ -86,13 +86,36 @@ sh /vagrant/scripts/clean.sh
 > **Note:** Accessing Argo CD requires **HTTPS**. Your browser will show a certificate warning; click **Advanced** and **Proceed to localhost**.
 
 ---
+To help your evaluators see exactly what you did to manipulate the cluster state manually, you can use the following Markdown block.
 
-## 🛠 Useful Commands
+### Manual Infrastructure Manipulation
+The following commands were used to demonstrate manual control over the `dev` environment, bypassing the standard GitOps flow for testing purposes:
 
-* **Force Sync Application:** ```bash
-    argocd app sync iot-app (if argocd CLI is installed)
-    ```
-* **Manual Port-Forward:** If the UI disconnects, run this inside the VM:
+* **Scaling the Deployment:**
+    Reducing the instance count to a single pod to verify resource management.
     ```bash
-    kubectl port-forward -n argocd svc/argocd-server 8080:443 --address 0.0.0.0 > /dev/null 2>&1 &
+    kubectl scale deployment wil-deployment --replicas=1 -n dev
     ```
+
+* **Updating the Container Image:**
+    Manually triggering a rollout of a new image version (`v2`) to test application updates.
+    ```bash
+    kubectl set image deployment/wil-deployment wil-app=wil42/playground:v2 -n dev
+    ```
+
+---
+
+### ⚠️ Note for Evaluators on Argo CD
+Since this project utilizes **Argo CD**, these manual changes are considered **"Drift"** from the desired state defined in the Git repository.
+
+1.  **Sync Status:** After running these commands, the Argo CD dashboard will mark the application as `OutOfSync`.
+2.  **Reversion:** If **Self-Heal** is enabled in the Argo CD Application spec, the cluster will automatically revert the replicas back to the original count and the image back to the version defined in Git within a few minutes.
+
+
+
+### Verification Commands
+To verify that these changes were successfully applied before Argo CD reconciles them, use:
+```bash
+# Check the new replica count and image status
+kubectl get deployment wil-deployment -n dev -o wide
+```

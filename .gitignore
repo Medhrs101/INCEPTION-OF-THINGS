@@ -1,3 +1,5 @@
 # === Vagrant & VirtualBox ===
 # Ignores the hidden vagrant folder in p1, p2, p3 etc.
 **/.vagrant/
+README.md
+.gitignore

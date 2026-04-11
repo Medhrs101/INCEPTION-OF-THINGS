@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/Medhrs101/IOT.git # YOUR REPO HERE
+    repoURL: https://github.com/mehdaoui-fatima/fmehdaou-ception.git # YOUR REPO HERE
     targetRevision: HEAD
     path: ./app # Path within the repo where your app manifests live
   destination:
