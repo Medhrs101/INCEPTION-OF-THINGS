@@ -7,32 +7,40 @@ Vagrant.configure(VAGRANTFILE_CONFIGURATION_VERSION) do |config|
   worker_ip = "192.168.56.111"
 
   scriptS = <<-SCRIPT
+  
+    apt-get update && apt-get install -y curl
+    apt-get install -y net-tools
     curl -sfL https://get.k3s.io | \
     INSTALL_K3S_EXEC="server \
     --node-ip=#{master_ip} \
     --flannel-iface=eth1 \
     --write-kubeconfig-mode 644" \
     sh -
-      
+
     cp /var/lib/rancher/k3s/server/token /vagrant/token
     echo "alias k='sudo /usr/local/bin/k3s kubectl'" >> /home/vagrant/.bashrc
   SCRIPT
 
   scriptW = <<-SCRIPT
     NODE_TOKEN=$(cat /vagrant/token)
+    apt-get update && apt-get install -y curl
+    apt-get install -y net-tools
     curl -sfL https://get.k3s.io | \
     K3S_URL="https://#{master_ip}:6443" \
     INSTALL_K3S_EXEC="agent --node-ip=#{worker_ip} --flannel-iface=eth1 --token-file=/vagrant/token" sh -
+    
     echo "alias k='sudo /usr/local/bin/k3s kubectl'" >> /home/vagrant/.bashrc
   SCRIPT
 
 
+
+
   config.vm.define "fmehdaouS" do |node|
-    #the name of an installed box
-    node.vm.box = "centos/stream9"
-    node.vm.box_version = "20260331.0"
+    node.vm.box = "debian/bookworm64"
+    node.vm.box_version = "12.20250126.1"
     node.vm.hostname = "fmehdaouS"
     node.vm.network "private_network", ip: master_ip
+    node.vm.synced_folder "./shared", "/vagrant"
     node.vm.provider "virtualbox" do |v|
     v.name = "fmehdaouS"
     v.memory = 1024
@@ -44,11 +52,11 @@ Vagrant.configure(VAGRANTFILE_CONFIGURATION_VERSION) do |config|
   end
 
    config.vm.define "fmehdaouSW" do |node|
-    node.vm.box = "centos/stream9"
-    node.vm.box_version = "20260331.0"
+    node.vm.box = "debian/bookworm64"
+    node.vm.box_version = "12.20250126.1"
     node.vm.hostname = "fmehdaouSW"
     node.vm.network "private_network", ip: worker_ip
-    config.vm.synced_folder ".", "/vagrant", type: "rsync"
+    node.vm.synced_folder "./shared", "/vagrant"
     node.vm.provider "virtualbox" do |v|
     v.name = "fmehdaouSW"
     v.memory = 1024

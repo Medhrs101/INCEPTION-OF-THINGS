@@ -5,29 +5,39 @@ Vagrant.configure(VAGRANTFILE_CONFIGURATION_VERSION) do |config|
 
   master_ip = "192.168.56.110"
 
-  scriptS = <<-SCRIPT
+  
+ scriptS = <<-SCRIPT
+    apt-get update && apt-get install -y curl
+    apt-get install -y net-tools
     curl -sfL https://get.k3s.io | \
     INSTALL_K3S_EXEC="server \
     --node-ip=#{master_ip} \
     --flannel-iface=eth1 \
     --write-kubeconfig-mode 644" \
     sh -
-      
-    cp /var/lib/rancher/k3s/server/token /vagrant/token
+
     echo "alias k='sudo /usr/local/bin/k3s kubectl'" >> /home/vagrant/.bashrc
-  SCRIPT
+
+    kubectl apply -f /vagrant/deployment.yaml
+
+    kubectl apply -f /vagrant/service.yaml
+
+    kubectl apply -f /vagrant/ingress.yaml
+
+    SCRIPT
+
 
 
   config.vm.define "fmehdaouS" do |node|
-    node.vm.box = "centos/stream9"
-    node.vm.box_version = "20260331.0"
+    node.vm.box = "debian/bookworm64"
+    node.vm.box_version = "12.20250126.1"
     node.vm.hostname = "fmehdaouS"
     node.vm.network "private_network", ip: master_ip
+    node.vm.synced_folder ".", "/vagrant"
     node.vm.provider "virtualbox" do |v|
-    config.vm.synced_folder ".", "/vagrant", type: "rsync"
     v.name = "fmehdaouS"
-    v.memory = 1024
-    v.cpus = 2
+    v.memory = 2048
+    v.cpus = 4
     end
 
     node.vm.provision "shell",
